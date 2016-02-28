@@ -6,7 +6,7 @@
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
-        Copyright 2013 Abram Hindle
+        Copyright 2016 Shawn Anderson
         
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -38,8 +38,10 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
         if (xhr.readyState==4) {
             try {
                 if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
+                    //: parse some JSON from the request!
+					data = JSON.parse(xhr.resonseText);
+                    //: Pass the data to the callback!
+					callback(data);
                 }
             } 
             catch(e) {
@@ -47,9 +49,21 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             }
         }
     };
-    //XXX: POST to a URL
-    //XXX: set the mimetype and the accept headers!
+    //: POST to a URL
+	xhr.open("POST", url, true);
+    //: set the mimetype and the accept headers!
     // Remember to use application/json !
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.setRequestHeader('Accept', 'application/json');
+	xhr.setRequestHeader('Access-Control-Allow-Headers', 'http://127.0.0.1');
+	xhr.setRequestHeader('Access-Control-Allow-Origin', 'http://127.0.0.1');
+	if(objects != null){
+		xhr.send(JSON.stringify(objects));		
+	}
+	else{
+		xhr.send();
+	}
+
 }
 
 
@@ -137,7 +151,9 @@ function getPosition(e) {
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
+    //: Send a XHTML Request that updates the entity you just  modified!
+	url = 'http://127.0.0.1:5000/entity/' + entity;
+	sendJSONXMLHTTPRequest(url, data, function(response){drawFrame();});
 
 }
 
@@ -261,8 +277,13 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 
 function update() {
-    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    drawFrame();
+    //: TODO Get the world from the webservice using a XMLHTTPRequest
+	url = 'http://127.0.0.1:5000/world';
+	sendJSONXMLHTTPRequest(url, null, function(response){
+		world = response;
+		drawNextFrame();
+		drawFrame();
+	});
 }
 
 // 30 frames per second
